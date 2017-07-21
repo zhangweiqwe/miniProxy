@@ -11,14 +11,22 @@ import android.widget.TextView
 /**
  * Created by admin on 2017/7/21 0021.n
  */
-class LogAdapter(var list: ArrayList<String> ,context:Context) : RecyclerView.Adapter<LogAdapter.ViewHolder>() {
+class LogAdapter (context: Context): RecyclerView.Adapter<LogAdapter.ViewHolder>() {
 
-    var tag:String = "LogAdapter";
+    var tag:String = LogAdapter.javaClass.toString();
+
+    companion object {
+        var list: ArrayList<String> = ArrayList()
+
+
+    }
+
 
     var inflater:LayoutInflater;
     init {
         inflater = LayoutInflater.from(context)
     }
+
     override fun onBindViewHolder(holder: ViewHolder?, position: Int) {
         holder?.title_TV?.setText(list?.elementAt(position));
     }
@@ -37,6 +45,7 @@ class LogAdapter(var list: ArrayList<String> ,context:Context) : RecyclerView.Ad
         constructor( itemView:View) : super(itemView) {
             title_TV = itemView.findViewById<TextView>(R.id.title_TV);
         }
-
     }
+
+
 }
