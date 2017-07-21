@@ -1,20 +1,33 @@
 package cn.wsgwz.miniproxy
 
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import cn.wsgwz.miniproxy.proxy.ProxyServer
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
 
 
+    companion object {
+        val logAction:String = "cn.wsgwz.miniproxy";
+        val logTagMsg = "msg";
+        fun log(context: Context,msg:String):Unit{
+            val intent:Intent = Intent(logAction);
+            intent.putExtra(logTagMsg,msg);
+            context.sendBroadcast(intent)
+        }
+    }
 
+    val logReceiver:LogReceiver = LogReceiver();
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,22 +37,26 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         package_uid_TV.text = android.os.Process.myUid().toString();
-        if(ProxyService.Companion.state==false) switch_Bn.setText(R.string.start) else switch_Bn.setText(R.string.stop)
+        if(ProxyServer.Companion.state==false) switch_Bn.setText(R.string.start) else switch_Bn.setText(R.string.stop)
         switch_Bn.setOnClickListener{
-            if(ProxyService.Companion.state==false){
-                ProxyService.Companion.state = true;
+            if(ProxyServer.Companion.state==false){
+                ProxyServer.Companion.state = true;
                 switch_Bn.setText(R.string.stop)
             }else{
-                ProxyService.Companion.state = false;
+                ProxyServer.Companion.state = false;
                 switch_Bn.setText(R.string.start)
             }
-            setProxyServiceState(ProxyService.Companion.state);
+            setProxyServiceState(ProxyServer.Companion.state);
         }
 
 
         var layoutMannager: LinearLayoutManager = LinearLayoutManager(this);
         log_RV.layoutManager = layoutMannager;
         log_RV.adapter = LogAdapter(this);
+
+        var logIntentFilter:IntentFilter = IntentFilter();
+        logIntentFilter.addAction(Companion.logAction);
+        registerReceiver(logReceiver,logIntentFilter);
 
     }
 
@@ -50,10 +67,20 @@ class MainActivity : AppCompatActivity() {
         }else{
             intent.putExtra(ProxyService.Companion.actionKey,ProxyService.Action.stop)
         }
-
         startService(intent);
+    }
 
 
+
+    class LogReceiver: BroadcastReceiver() {
+        override fun onReceive(p0: Context?, p1: Intent?) {
+            LogAdapter.list.add(p1?.getStringExtra(Companion.logTagMsg)?:"null pointer");
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(logReceiver);
     }
 
 }
